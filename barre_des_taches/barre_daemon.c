@@ -12,14 +12,6 @@
 #include "graphiques.h"
 #include "taches.h"
 
-pixels init_gui()
-{ pixels fb;
-  fb.pix = open("/dev/fb0", O_WRONLY | O_SYNC);
-  fb.w = 1024;
-  fb.h = 600;
-  fb.shift = 0;
-  return (fb); }
-
 void tache_cachee()
 { pixels fb = init_gui();
   while (42)
