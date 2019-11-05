@@ -49,8 +49,25 @@ void dessin_pave(rectangle rect, couleurs couleur, pixels *fb)
     i += 1; }
   lseek((*fb).pix, (*fb).shift, SEEK_SET); }
 
+void dessin_cercle(cercle c, couleurs couleur, pixels *fb)
+{ float i = -3.14;
+  float x, y, tmp_x, tmp_y;
+  float pas = 3.14 / (c.rayon * 2);
+  x = c.x + (u_int)(cos(i) * (float)c.rayon);
+  y = c.y + (u_int)(sin(i) * (float)c.rayon);
+  while (i <= 3.14)
+  { i += pas;
+    tmp_x = c.x + (u_int)(cos(i) * (float)c.rayon);
+    tmp_y = c.y + (u_int)(sin(i) * (float)c.rayon);
+    ligne l = { x, y, tmp_x, tmp_y };
+    dessin_ligne(l, couleur, fb);
+    x = tmp_x;
+    y = tmp_y; }}
+
 void dessin_ligne(ligne l, couleurs couleur, pixels *fb)
-{ float i = 0;
+{ if (l.x1 >= (*fb).w || l.x2 >= (*fb).w || l.y1 >= (*fb).h || l.y2 >= (*fb).h)
+  { return; }
+  float i = 0;
   int tmp;
   u_int nb_pixels_dessin;
   float a = 0;
@@ -113,21 +130,5 @@ void dessin_ligne(ligne l, couleurs couleur, pixels *fb)
         i += 1; }}}
   (*fb).shift = (l.x2 + (l.y2 * (*fb).w)) * sizeof(u_int);
   lseek((*fb).pix, (*fb).shift, SEEK_SET);
-  write((*fb).pix, (char*)(&couleur), sizeof(u_int));
-}
-
-void dessin_cercle(cercle c, couleurs couleur, pixels *fb)
-{ 
-/*  u_int x = c.x, y = c.y - c.rayon;
-  float pas = (3.14 * 2) / 150;
-  float i = 3.14 / 2;
-  while (i <= ((3.14 * 5) / 2) + pas)
-  { //float st_x = c.x + (c.rayon * cos(i)), st_y = c.y - (c.rayon * sin(i));
-    //ligne l = { x, y, st_x, y };
-    //dessin_ligne();
-    x = st_x;
-    y = st_y;
-    i += pas; }
-*/ }
-
+  write((*fb).pix, (char*)(&couleur), sizeof(u_int)); }
 

@@ -1,3 +1,5 @@
 barre_des_taches/utilitaire
 fbpdf
 libgraphique/bibliotheque/libgraphique.a
+libgraphique/bibliotheque/test/cercle
+libgraphique/bibliotheque/test/ligne
