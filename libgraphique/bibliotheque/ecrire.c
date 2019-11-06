@@ -59,24 +59,4 @@ void phrase_bande(u_char *str, u_int taille, couleurs fg, couleurs bg, pixels *f
 void phrase_verre(u_char *str, u_int taille, couleurs fg, couleurs bg, pixels *fb)
 {
   }
-/*
-    y = 0;
-    while (y < 9)
-    { x = 0;
-      while (x < 7)
-      { bande[y][x + (i * 8)] = from_table & ((u_long)1 << (((9 - y) * 7) - x)) ? fg : bg;
-        x += 1; }
-      bande[y][x + (i * 8)] = bg;
-      y += 1; }
-*/
-/*
-i = 0;
-while (i < taille * 8)
-{ write(fd, bande[y][i] == fg ? "1" : "0", 1);
-  i += 1; }
-write(fd, "\n", 1);
-int fd = open("Bonjour.txt", O_CREAT | O_WRONLY);
-lseek(fd, i * 8, SEEK_SET);
-write(fd, from_table & ((u_long)1 << ((((9 - y) * 7) - 1) - x)) ? "1" : "0", 1);
-write(fd, "0\n", 1);
-*/
+

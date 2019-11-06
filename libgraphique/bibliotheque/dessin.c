@@ -11,17 +11,16 @@
 #include "graphiques.h"
 
 void dessin_rect(rectangle rect, couleurs couleur, pixels *fb)
-{ u_int hor_bord[1024];
-  u_int i = 0;
+{ u_int i = 0;
   if (rect.w < 2 || rect.h < 2)
   { return; }
   while (i < rect.w)
-  { hor_bord[i] = couleur;
+  { (*fb).remplisseur[i] = couleur;
     i += 1; }
   if (rect.x < (*fb).w && rect.y < (*fb).h)
   { (*fb).shift = (rect.x + (rect.y * (*fb).w)) * sizeof(u_int); }
   lseek((*fb).pix, (*fb).shift , SEEK_SET);
-  write((*fb).pix, hor_bord, rect.w * sizeof(u_int));
+  write((*fb).pix, (*fb).remplisseur, rect.w * sizeof(u_int));
   i = 0;
   while (i < rect.h - 2)
   { lseek((*fb).pix, (*fb).shift + (((i + 1) * (*fb).w) * sizeof(u_int)), SEEK_SET);
@@ -30,22 +29,21 @@ void dessin_rect(rectangle rect, couleurs couleur, pixels *fb)
     write((*fb).pix, (char*)(&couleur), 4);
     i += 1; }
   lseek((*fb).pix, (*fb).shift + (((i + 1) * (*fb).w) * sizeof(u_int)), SEEK_SET);
-  write((*fb).pix, hor_bord, rect.w * sizeof(u_int));
+  write((*fb).pix, (*fb).remplisseur, rect.w * sizeof(u_int));
   lseek((*fb).pix, (*fb).shift, SEEK_SET); }
 
 void dessin_pave(rectangle rect, couleurs couleur, pixels *fb)
-{ u_int remplisseur[1024];
-  u_int i = 0;
+{ u_int i = 0;
   if (rect.w < 2 || rect.h < 2 || rect.x >= (*fb).w || rect.y >= (*fb).h)
   { return; }
   while (i < rect.w)
-  { remplisseur[i] = couleur;
+  { (*fb).remplisseur[i] = couleur;
     i += 1; }
   (*fb).shift = (rect.x + (rect.y * (*fb).w)) * sizeof(u_int);
   i = 0;
   while (i < rect.h)
   { lseek((*fb).pix, (*fb).shift + ((i * (*fb).w) * sizeof(u_int)), SEEK_SET);
-    write((*fb).pix, remplisseur, rect.w * sizeof(u_int));
+    write((*fb).pix, (*fb).remplisseur, rect.w * sizeof(u_int));
     i += 1; }
   lseek((*fb).pix, (*fb).shift, SEEK_SET); }
 

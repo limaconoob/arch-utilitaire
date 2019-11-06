@@ -14,6 +14,7 @@
     Gris = 0x005F5F5F,
     Violet = 0x005F2F9F,
     Blanc = 0x009F9F9F,
+    Transparent = 0xFF000000,
   } couleurs;
 
 #endif
