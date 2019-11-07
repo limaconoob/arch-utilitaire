@@ -8,6 +8,20 @@
 
 #include <stdio.h>
 
+void verre7x9(extra_font c, couleurs fg, pixels *fb)
+{ draw from_table = icones7x9[c];
+  u_char y = 0, x;
+  (*fb).shift += sizeof(u_int);
+  while (y < 9)
+  { x = 0;
+    while (x < 7)
+    { if (from_table & ((u_long)1 << (((9 - y) * 7) - x)))
+      { lseek((*fb).pix, (*fb).shift + ((x + ((y + 1) * (*fb).w)) * sizeof(u_int)), SEEK_SET);
+        write((*fb).pix, (char*)(&fg), sizeof(u_int)); }
+      x += 1; }
+    y += 1; }
+  (*fb).shift += 8; }
+
 void dessin7x9(extra_font c, couleurs fg, couleurs bg, pixels *fb)
 { u_int carr[7];
   bzero(carr, 7 * sizeof(u_int));
