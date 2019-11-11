@@ -18,7 +18,10 @@ static void icone_batterie(int puissance, couleurs bat, pixels *fb)
   int i = 1;
   lseek((*fb).pix, (((*fb).w - 29) + (4 * (*fb).w)) * sizeof(int), SEEK_SET);
   while (i < puissance + 1)
-  { ligne[i] = puissance > 6 ? bat : Rouge;
+  { if (bat == Vert)
+    { ligne[i] = puissance > 6 ? Vert : Rouge; }
+    else
+    { ligne[i] = Cyan; }
     i += 1; }
   while (i < 17)
   { ligne[i] = Noir;
