@@ -10,6 +10,15 @@
 
 #include "graphiques.h"
 
+point_pix creation_pixel(u_int x, u_int y, couleurs c)
+{ point_pix p = { x, y, c };
+  return (p); }
+
+void dessin_pixel(point_pix p, pixels *fb)
+{ (*fb).shift = (p.x + (p.y * (*fb).w)) * sizeof(u_int);
+  lseek((*fb).pix, (*fb).shift, SEEK_SET);
+  write((*fb).pix, (char*)(&p.c), sizeof(u_int)); }
+
 void dessin_rect(rectangle rect, couleurs couleur, pixels *fb)
 { u_int i = 0;
   if (rect.w < 2 || rect.h < 2)

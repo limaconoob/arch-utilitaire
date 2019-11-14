@@ -312,26 +312,6 @@ aReserved 0
 #define KEY_POWER		116
 */
 
-typedef struct peripherique
-{ int clv; //1 seul clavier
-  int srs; //1 seule souris
-  u_int motion_x;
-  u_int motion_y;
-  extra_font icone_souris;
-  couleurs pointeur;
-  pthread_t canaux[2];
-  pixels fb;
-  } peripherique;
-
-void clavier_interne()
-{ 
-  }
-
-typedef enum bool_sauvegarde
-{ Sauve,
-  Charge,
-  } bool_sauvegarde;
-
 void dessous_icone(bool_sauvegarde s, pixels *fb)
 { static u_int sauvegarde[9][7];
   u_int y = 0, x;
@@ -355,14 +335,11 @@ void dessous_icone(bool_sauvegarde s, pixels *fb)
       y += 1; }}}
 
 void pointeur_souris(peripherique *souris, u_int x, u_int y, pixels *fb)
-{ //if (x < 2 || y < 2)
-  //{ return; }
-  (*fb).shift = ((*souris).motion_x + ((*souris).motion_y * (*fb).w)) * sizeof(u_int);
+{ (*fb).shift = ((*souris).motion_x + ((*souris).motion_y * (*fb).w)) * sizeof(u_int);
   dessous_icone(Charge, fb);
   (*fb).shift = (x + (y * (*fb).w)) * sizeof(u_int);
   dessous_icone(Sauve, fb);
-  (*fb).shift = (x + (y * (*fb).w)) * sizeof(u_int);
-  verre7x9((*souris).icone_souris, Jaune, fb);
+  verre7x9((*souris).icone_souris, Jaune, x, y, fb);
   (*souris).motion_x = x;
   (*souris).motion_y = y; }
 
@@ -372,11 +349,26 @@ void *gestion_souris(void *s)
   while (read(periph.srs, &e, sizeof(struct input_event)))
   { if (e.type == EV_ABS)
     { if (e.code == ABS_MT_POSITION_X)
-      { pointeur_souris(&periph, (e.value - 1274) / 4, periph.motion_y, &periph.fb); }
+      { pointeur_souris(&periph, ((e.value - 1274) * (*periph.fb).w) / 4452, periph.motion_y, periph.fb); }
       else if (e.code == ABS_MT_POSITION_Y)
-      { pointeur_souris(&periph, periph.motion_x, (e.value - 916) / 4, &periph.fb); }
-    }}
-}
+      { pointeur_souris(&periph, periph.motion_x, ((e.value - 916) * (*periph.fb).h) / 4040, periph.fb); }}
+    else if (e.type == EV_KEY) 
+    { if (e.value == 1) /// Appui
+      { if (e.code == BTN_LEFT)
+        {}
+        else if (e.code == BTN_RIGHT)
+        {}}
+      else if (e.value == 0) /// Relâchement
+      { if (e.code == BTN_LEFT)
+        {}
+        else if (e.code == BTN_RIGHT)
+        {}}}}}
+
+// BTN_TOOL_FINGER
+// BTN_TOUCH
+
+    //{ printf("(%lu, %lu)\n", periph.motion_x, periph.motion_y); }
+    //{ printf("TYPE::%d, CODE::%d, VALUE::%d\n", e.type, e.code, e.value); }
 
 void *gestion_clavier(void *s)
 { peripherique periph = *((peripherique*)s);
@@ -387,13 +379,16 @@ void *gestion_clavier(void *s)
     { if (e.value == 1) // Appui
       { if (altgr == 0 && e.code < 54)
         { if (shift == 0)
-          { printf("NOYAU::%c, CODE::%d\n", noyau_clavier[e.code], e.code); }
+          { //printf("NOYAU::%c, CODE::%d\n", noyau_clavier[e.code], e.code); }
+            }
           else if (shift == 1)
-          { printf("NOYAU::%c, CODE::%d\n", noyau_shift_clavier[e.code], e.code); }
+          { //printf("NOYAU::%c, CODE::%d\n", noyau_shift_clavier[e.code], e.code); }
+            }
           if (e.code == KEY_LEFTSHIFT || e.code == KEY_RIGHTSHIFT) 
           { shift = 1; }}
         if (altgr == 1 && e.code < 14)
-        { printf("NOYAU::%c, CODE::%d\n", noyau_altgr_clavier[e.code], e.code); }
+        { //printf("NOYAU::%c, CODE::%d\n", noyau_altgr_clavier[e.code], e.code); }
+          }
         if (e.code == 100)
         { altgr = 1; }
         }
@@ -407,22 +402,18 @@ void *gestion_clavier(void *s)
       {}}}
 }
 
-peripherique init_periph(void)
+peripherique init_periph(pixels *fb)
 { peripherique periph;
   periph.clv = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY | O_SYNC);
   periph.srs = open("/dev/input/by-path/platform-i8042-serio-1-event-mouse", O_RDONLY | O_SYNC);
   periph.motion_x = 0;
   periph.motion_y = 0;
-  periph.fb = init_gui();
-  periph.icone_souris = Souris_Doigt;
+  periph.icone_souris = Souris_Fleche;
+  periph.etat_clavier = 0;
+  periph.fb = fb;
   pthread_create(&(periph.canaux[0]), (void*)0, &gestion_souris, &periph);
   pthread_create(&(periph.canaux[1]), (void*)0, &gestion_clavier, &periph);
   return (periph); }
-
-int main()
-{ (void)init_periph();
-  while (42)
-  {}}
 
 //cat /dev/input/by-path/platform-i8042-serio-0-event-kbd
 //cat /dev/input/mouse0

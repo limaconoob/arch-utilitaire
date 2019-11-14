@@ -27,9 +27,7 @@ static void dessin_horloge(pixels *fb, struct tm the_time)
   cadran[11] = ':';
   cadran[12] = (the_time.tm_sec / 10) + '0';
   cadran[13] = (the_time.tm_sec % 10) + '0';
-  (*fb).shift = (((*fb).w - 154) + ((*fb).w * 2)) * sizeof(u_int);
-  lseek((*fb).pix, (*fb).shift, SEEK_SET);
-  phrase_bande(cadran, 14, Blanc, Noir, fb); }
+  phrase_bande(cadran, 14, Blanc, Noir, (*fb).w - 154, 2, fb); }
 
 void gestion_horloge(pixels *fb)
 { time_t t;

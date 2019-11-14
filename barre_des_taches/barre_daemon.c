@@ -12,7 +12,7 @@
 #include "graphiques.h"
 #include "taches.h"
 
-void tache_cachee()
+static void tache_cachee()
 { pixels fb = init_gui();
   while (42)
   { gestion_batterie(&fb);
@@ -20,7 +20,7 @@ void tache_cachee()
     gestion_internet(&fb);
     usleep(100000); }}
 
-void pid_fantome()
+static void pid_fantome()
 { pid_t pere;
   while (42)
   { pere = fork();

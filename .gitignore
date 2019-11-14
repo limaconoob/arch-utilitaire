@@ -4,3 +4,4 @@ libgraphique/bibliotheque/libgraphique.a
 libgraphique/bibliotheque/entrees
 libgraphique/bibliotheque/test/cercle
 libgraphique/bibliotheque/test/ligne
+gestionnaire_de_fenetres/notes.c
