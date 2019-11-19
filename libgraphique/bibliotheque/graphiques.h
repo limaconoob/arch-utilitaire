@@ -114,6 +114,9 @@
   void verre7x9(extra_font c, couleurs fg, u_int mx, u_int my, pixels *fb);
   void phrase_bande(u_char *str, u_int taille, couleurs fg, couleurs bg, u_int mx, u_int my, pixels *fb);
 
+  /// Dessin indépendant
+  void dessin_objet(u_int *objet, rectangle rect, pixels *fb);
+
   /// Gestion des périphériques entrants
   peripherique init_periph(pixels *fb);
 

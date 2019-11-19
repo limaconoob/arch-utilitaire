@@ -19,6 +19,17 @@ void dessin_pixel(point_pix p, pixels *fb)
   lseek((*fb).pix, (*fb).shift, SEEK_SET);
   write((*fb).pix, (char*)(&p.c), sizeof(u_int)); }
 
+void dessin_objet(u_int *objet, rectangle rect, pixels *fb)
+{ if (rect.w < 2 || rect.h < 2)
+  { return; }
+  if (rect.x < (*fb).w && rect.y < (*fb).h)
+  { (*fb).shift = (rect.x + (rect.y * (*fb).w)) * sizeof(u_int); }
+  u_int y = 0;
+  while (y < rect.h)
+  { lseek((*fb).pix, (*fb).shift + ((y * (*fb).w) * sizeof(u_int)), SEEK_SET);
+    write((*fb).pix, (char*)objet, rect.w * sizeof(u_int));
+    y += 1; }}
+
 void dessin_rect(rectangle rect, couleurs couleur, pixels *fb)
 { u_int i = 0;
   if (rect.w < 2 || rect.h < 2)

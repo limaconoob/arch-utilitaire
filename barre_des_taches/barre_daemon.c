@@ -15,7 +15,8 @@
 static void tache_cachee()
 { pixels fb = init_gui();
   while (42)
-  { gestion_batterie(&fb);
+  { vive_la_France(&fb);
+    gestion_batterie(&fb);
     gestion_horloge(&fb);
     gestion_internet(&fb);
     usleep(100000); }}

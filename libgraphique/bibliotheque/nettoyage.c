@@ -18,8 +18,6 @@ void nettoyage(couleurs couleur, pixels *fb)
 
 void toile_vierge(rectangle cadre, couleurs bords, couleurs fond, pixels *fb)
 { dessin_pave(cadre, fond, fb);
-  dessin_rect(cadre, bords, fb);
-  (*fb).shift += cadre.w * sizeof(u_int);
-  lseek((*fb).pix, (*fb).shift, SEEK_SET); }
+  dessin_rect(cadre, bords, fb); }
 
 // cat /sys/class/graphics/fb0/virtual_size

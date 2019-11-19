@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "graphiques.h"
-#include "display.h"
+#include "fonte.h"
 
 #include <stdio.h>
 
