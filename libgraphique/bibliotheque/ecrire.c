@@ -8,6 +8,9 @@
 
 #include <stdio.h>
 
+draw depuis_icones7x9(extra_font c)
+{ return (icones7x9[c]); }
+
 void verre7x9(extra_font c, couleurs fg, u_int mx, u_int my, pixels *fb)
 { u_int xmax, ymax;
   if (mx >= (*fb).w || my >= (*fb).h)
@@ -83,8 +86,9 @@ void phrase_bande(u_char *str, u_int taille, couleurs fg, couleurs bg, u_int mx,
       y += 1; }
     i += 1; }
   y = 0;
-  rectangle r = { 1024, 1024, (taille * 8) + 1, 11 };
-  dessin_rect(r, bg, fb);
+  point_pix pix = { 1024, 1024, bg };
+  rectangle r = { pix, (taille * 8) + 1, 11 };
+  dessin_rect(r, fb);
   (*fb).shift += sizeof(u_int);
   while (y < 9)
   { lseek((*fb).pix, (*fb).shift + (((y + 1) * (*fb).w) * sizeof(u_int)), SEEK_SET);
@@ -95,4 +99,40 @@ void phrase_bande(u_char *str, u_int taille, couleurs fg, couleurs bg, u_int mx,
 void phrase_verre(u_char *str, u_int taille, couleurs fg, couleurs bg, pixels *fb)
 {
   }
+
+void dessin8bits(u_char c, couleurs fg, couleurs bg, u_int mx, u_int my, pixels *fb)
+{ if (mx >= (*fb).w || my >= (*fb).h)
+  { return; }
+  u_char k;
+  if (c >= 97 && c <= 132)
+  { k = font8bits[c - 97]; }
+  else if (0b00110000 & c == 0b00110000 && 0b1111 & c <= 9)
+  { k = font8bits[c - 48]; }
+  else
+  { return ; }
+  u_int xmax, ymax;
+  if (mx + 3 < (*fb).w)
+  { xmax = 3; }
+  else
+  { xmax = (*fb).w - mx - 1; }
+  if (my + 3 < (*fb).h)
+  { ymax = 3; }
+  else
+  { ymax = (*fb).h - my - 1; }
+  (*fb).shift = ((mx + (my * (*fb).w)) + 1) * sizeof(u_int);
+  u_int carr[3];
+  bzero(carr, 3 * sizeof(u_int));
+  u_char y = 0, x;
+  while (y < ymax)
+  { x = 0;
+    while (x < xmax)
+    { if (x == 2  && !y)
+      { carr[x] = bg;
+        break; }
+      carr[x] = k & ((u_char)1 << (((3 - y) * 3) - x)) ? fg : bg;
+      x += 1; }
+    lseek((*fb).pix, (*fb).shift + (((y + 1) * (*fb).w) * sizeof(u_int)), SEEK_SET);
+    write((*fb).pix, carr, 3 * sizeof(u_int));
+    y += 1; }
+  lseek((*fb).pix, (*fb).shift, SEEK_SET); }
 

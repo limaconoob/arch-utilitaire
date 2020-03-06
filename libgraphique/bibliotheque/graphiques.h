@@ -6,22 +6,25 @@
   #include "couleurs.h"
   #include "types.h"
 
-  typedef struct rectangle
+  typedef struct point_pix
   { u_int x;
     u_int y;
+    couleurs c;
+  } point_pix;
+
+  typedef struct rectangle
+  { point_pix xy; // Coordonnées du coin en haut à gauche
     u_int w;
     u_int h;
   } rectangle;
 
   typedef struct cercle
-  { u_int x;  // -,
-    u_int y;  // -'-> Coordonnées du centre 
+  { point_pix xy; // Coordonnées du centre 
     u_int rayon;
   } cercle;
 
   typedef struct ligne
-  { u_int x1;
-    u_int y1;
+  { point_pix xy;
     u_int x2;
     u_int y2;
   } ligne;
@@ -40,6 +43,15 @@
     Souris_Marqueur,
     Souris_Fleche,
     Souris_Doigt,
+    Croix,
+    Lune_Gauche,
+    Lune_Droite,
+    Lune_Haute,
+    Lune_Basse,
+    Coin_Bas_Gauche,
+    Coin_Bas_Droite,
+    Coin_Haut_Gauche,
+    Coin_Haut_Droite,
     gomme,
   } extra_font;
 
@@ -51,45 +63,6 @@
     u_int remplisseur[1024];
   } pixels;
   // u_int buf_copy[600][1024]; // copie de la matrice de pixels
-
-  typedef enum Etat_Clavier
-  { Shift_Droit = 0x01,
-    Shift_Gauche = 0x02,
-    AltGr = 0x04,
-    Alt = 0x08,
-    Controle_Droit = 0x10,
-    Controle_Gauche = 0x20,
-    Verrou_Majuscule = 0x40,
-    Verrou_Pave_Numerique = 0x80,
-  } Etat_Clavier;
-
-  typedef struct peripherique
-  { int clv; //1 seul clavier
-    int srs; //1 seule souris
-    u_int motion_x;
-    u_int motion_y;
-    extra_font icone_souris;
-    couleurs pointeur;
-    u_char etat_clavier;
-    pthread_t canaux[2];
-    pixels *fb;
-  } peripherique;
-
-  typedef enum bool_sauvegarde
-  { Sauve,
-    Charge,
-  } bool_sauvegarde;
-
-  typedef struct maitre_interface
-  { pixels fb;
-    peripherique periph;
-  } maitre_interface;
-
-  typedef struct point_pix
-  { u_int x;
-    u_int y;
-    couleurs c;
-  } point_pix;
 
   /// Initialisation de la surface graphique
   pixels init_gui(void);
@@ -104,20 +77,19 @@
 
   /// Dessin de formes et surfaces
   void dessin_pixel(point_pix p, pixels *fb);
-  void dessin_rect(rectangle rect, couleurs couleur, pixels *fb);
-  void dessin_pave(rectangle rect, couleurs couleur, pixels *fb);
-  void dessin_ligne(ligne l, couleurs couleur, pixels *fb);
-  void dessin_cercle(cercle c, couleurs couleur, pixels *fb);
+  void dessin_rect(rectangle rect, pixels *fb);
+  void dessin_pave(rectangle rect, pixels *fb);
+  void dessin_ligne(ligne l, pixels *fb);
+  void dessin_cercle(cercle c, pixels *fb);
+  void dessin_disque(cercle c, pixels *fb);
 
   /// Ecriture de texte (voir display.h > font 7x9)
   void dessin7x9(extra_font c, couleurs fg, couleurs bg, u_int mx, u_int my, pixels *fb);
   void verre7x9(extra_font c, couleurs fg, u_int mx, u_int my, pixels *fb);
   void phrase_bande(u_char *str, u_int taille, couleurs fg, couleurs bg, u_int mx, u_int my, pixels *fb);
+  draw depuis_icones7x9(extra_font c);
 
   /// Dessin indépendant
   void dessin_objet(u_int *objet, rectangle rect, pixels *fb);
-
-  /// Gestion des périphériques entrants
-  peripherique init_periph(pixels *fb);
 
 #endif

@@ -13,11 +13,14 @@ void nettoyage(couleurs couleur, pixels *fb)
     { write((*fb).pix, (*fb).remplisseur, 1024 * sizeof(u_int));
       i += 1; }}
   else
-  { rectangle r = { 0, 0, (*fb).w, (*fb).h };
-    dessin_pave(r, couleur, fb); }}
+  { point_pix pix = { 0, 0, couleur };
+    rectangle r = { pix, (*fb).w, (*fb).h };
+    dessin_pave(r, fb); }}
 
 void toile_vierge(rectangle cadre, couleurs bords, couleurs fond, pixels *fb)
-{ dessin_pave(cadre, fond, fb);
-  dessin_rect(cadre, bords, fb); }
+{ cadre.xy.c = fond;
+  dessin_pave(cadre, fb);
+  cadre.xy.c = bords;
+  dessin_rect(cadre, fb); }
 
 // cat /sys/class/graphics/fb0/virtual_size

@@ -13,6 +13,7 @@
     Magenta = 0x009F009F,
     Gris = 0x005F5F5F,
     Violet = 0x005F2F9F,
+    Rose = 0x00F183B4,
     Blanc = 0x009F9F9F,
     Transparent = 0xFF000000,
   } couleurs;
