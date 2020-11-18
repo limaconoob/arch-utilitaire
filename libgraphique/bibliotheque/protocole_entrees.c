@@ -1,6 +1,7 @@
 
 #include <fcntl.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <strings.h>
 #include <sys/types.h>
@@ -10,6 +11,11 @@
 #include <linux/input.h>
 
 #include "peripheriques.h"
+#include "noyau_clavier.h"
+
+// Mettre un get_event() dans le programme utilisateur
+// init_event 
+// read /dev/input, et qui crée un Socket par nouveau processus
 
 void dessous_icone(bool_sauvegarde s, pixels *fb)
 { static u_int sauvegarde[9][7];
@@ -43,15 +49,15 @@ void pointeur_souris(souris *srs, u_int x, u_int y, pixels *fb)
   (*srs).motion_y = y; }
 
 void *gestion_souris(void *s)
-{ peripherique periph = *((peripherique*)s);
-  souris srs = periph.srs;
+{ peripherique *periph = (peripherique*)s;
+  souris *srs = &((*periph).srs);
   struct input_event e;
-  while (read(srs.fd, &e, sizeof(struct input_event)))
+  while (read((*srs).fd, &e, sizeof(struct input_event)))
   { if (e.type == EV_ABS)
     { if (e.code == ABS_MT_POSITION_X)
-      { pointeur_souris(&srs, ((e.value - 1274) * (*periph.fb).w) / 4452, srs.motion_y, periph.fb); }
+      { pointeur_souris(srs, ((e.value - 1274) * (*(*periph).fb).w) / 4452, (*srs).motion_y, (*periph).fb); }
       else if (e.code == ABS_MT_POSITION_Y)
-      { pointeur_souris(&srs, srs.motion_x, ((e.value - 916) * (*periph.fb).h) / 4040, periph.fb); }}
+      { pointeur_souris(srs, (*srs).motion_x, ((e.value - 916) * (*(*periph).fb).h) / 4040, (*periph).fb); }}
     else if (e.type == EV_KEY) 
     { if (e.value == 1) /// Appui
       { if (e.code == BTN_LEFT)
@@ -62,7 +68,8 @@ void *gestion_souris(void *s)
       { if (e.code == BTN_LEFT)
         {}
         else if (e.code == BTN_RIGHT)
-        {}}}}}
+        {}}}
+    /*kill((*periph).pid, SIGUSR2);*/ }}
 
 // BTN_TOOL_FINGER
 // BTN_TOUCH
@@ -79,17 +86,17 @@ void *gestion_clavier(void *s)
     { if (e.value == 1) // Appui
       { if ((*periph).clv.flag_persistant & AltGr != 0 && e.code < 54)
         { if ((*periph).clv.flag_persistant & Shift != 0)
-          { //printf("NOYAU::%c, CODE::%d\n", noyau_clavier[e.code], e.code); }
+          { //printf("NOYAU::%c, CODE::%d\n", noyau_clavier[e.code], e.code);
             }
           else if ((*periph).clv.flag_persistant & Shift == 0)
-          { //printf("NOYAU::%c, CODE::%d\n", noyau_shift_clavier[e.code], e.code); }
+          { //printf("NOYAU::%c, CODE::%d\n", noyau_shift_clavier[e.code], e.code);
             }
           if (e.code == KEY_LEFTSHIFT)
           { (*periph).clv.flag_persistant |= Shift_Gauche; }
           else if (e.code == KEY_RIGHTSHIFT)
           { (*periph).clv.flag_persistant |= Shift_Droit; }}
         if ((*periph).clv.flag_persistant & AltGr && e.code < 14)
-        { //printf("NOYAU::%c, CODE::%d\n", noyau_altgr_clavier[e.code], e.code); }
+        { //printf("NOYAU::%c, CODE::%d\n", noyau_altgr_clavier[e.code], e.code);
           }
         if (e.code == KEY_RIGHTALT)
         { (*periph).clv.flag_persistant |= AltGr; }
@@ -103,22 +110,30 @@ void *gestion_clavier(void *s)
         { (*periph).clv.flag_persistant -= AltGr; }
         }
       else if (e.value == 2) // Maintien enfoncé
-      {}}}
+      {}}
+    kill((*periph).pid, SIGUSR1); }
 }
 
-peripherique init_periph(pixels *fb)
+void init_souris(peripherique *periph)
+{ (*periph).srs.fd = open("/dev/input/by-path/platform-i8042-serio-1-event-mouse", O_RDONLY | O_SYNC);
+  (*periph).srs.motion_x = 0;
+  (*periph).srs.motion_y = 0;
+  (*periph).srs.icone_souris = Souris_Fleche;
+  pthread_create(&((*periph).srs.canal), (void*)0, &gestion_souris, periph); }
+
+void init_clavier(peripherique *periph)
+{ (*periph).clv.fd = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY | O_SYNC);
+  (*periph).clv.flag_persistant = 0;
+  (*periph).clv.derniere_touche = 0;
+  bzero((*periph).clv.queue, 42 * sizeof(u_int));
+  pthread_create(&((*periph).clv.canal), (void*)0, &gestion_clavier, periph); }
+
+peripherique init_periph(pid_t maitre_pid, pixels *fb)
 { peripherique periph;
-  periph.clv.fd = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY | O_SYNC);
-  periph.clv.flag_persistant = 0;
-  periph.clv.derniere_touche = 0;
-  bzero(periph.clv.queue, 42 * sizeof(u_int));
-  periph.srs.fd = open("/dev/input/by-path/platform-i8042-serio-1-event-mouse", O_RDONLY | O_SYNC);
-  periph.srs.motion_x = 0;
-  periph.srs.motion_y = 0;
-  periph.srs.icone_souris = Souris_Fleche;
+  bzero(&(periph.clv.canal), sizeof(pthread_t));
+  bzero(&(periph.srs.canal), sizeof(pthread_t));
+  periph.pid = maitre_pid;
   periph.fb = fb;
-  pthread_create(&(periph.canaux[0]), (void*)0, &gestion_souris, &periph);
-  pthread_create(&(periph.canaux[1]), (void*)0, &gestion_clavier, &periph);
   return (periph); }
 
 /*

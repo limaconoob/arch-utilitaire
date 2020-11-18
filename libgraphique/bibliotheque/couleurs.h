@@ -4,6 +4,9 @@
 
   typedef enum couleurs
   { Vert = 0x00009F00, // 0RGB
+    Tek_R = 0x00FF0000,
+    Tek_V = 0x0000FF00,
+    Tek_B = 0x000000FF,
     Cyan = 0x00009F9F,
     Bleu = 0x0000009F,
     Noir = 0x00000000,
