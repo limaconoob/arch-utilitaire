@@ -109,10 +109,36 @@ static void ping_pid(int sig, siginfo_t *siginfo, void *contexte)
       nouveau_processus((*siginfo).si_pid, (*siginfo).si_value.sival_int);
       break; }}}
 
+void envoyer_souris(processus_ctrl *maitre_proc, peripherique per)
+{ char motion_souris[40];
+  size_t num_taille = 9;
+  memcpy(motion_souris, "MOTION::(", 9);
+  bzero(&(motion_souris[num_taille]), 31);
+  NBR(&(motion_souris[num_taille]), per.srs.motion_x);
+  num_taille += NBR_LEN(per.srs.motion_x);
+  memcpy(&(motion_souris[num_taille]), ", ", 2);
+  num_taille += 2;
+  NBR(&(motion_souris[num_taille]), per.srs.motion_y);
+  num_taille += NBR_LEN(per.srs.motion_y);
+  memcpy(&(motion_souris[num_taille]), ")\n", 2);
+  write((*maitre_proc).sub_fd, motion_souris, num_taille + 2); }
+
+void envoyer_clavier(processus_ctrl *maitre_proc, peripherique per)
+{ char touche_clavier[20];
+  size_t num_taille = 9;
+  memcpy(touche_clavier, "CLAVIER::", 9);
+//  bzero(&(touche_clavier[num_taille]), 11);
+//  NBR(&(touche_clavier[num_taille]), per.clv.derniere_touche);
+//  num_taille += NBR_LEN(per.clv.derniere_touche);
+  touche_clavier[9] = per.clv.derniere_touche;
+  touche_clavier[10] = '\n';
+  write((*maitre_proc).sub_fd, touche_clavier, 11); }
+
 static void tache_cachee()
 { pixels fb = init_gui();
   peripherique per = init_periph(getpid(), &fb);
   init_souris(&per);
+  init_clavier(&per);
   struct sigaction act;
   bzero(&act, sizeof(act));
   act.sa_sigaction = &ping_pid;
@@ -121,28 +147,10 @@ static void tache_cachee()
   processus_ctrl *maitre_proc = (void*)0;
   while (!maitre_proc)
   { maitre_proc = nouveau_processus(0, 0); }
-  char motion_souris[40];
-  size_t num_taille = 9;
-  memcpy(motion_souris, "MOTION::(", 9);
- int uu = 0;
   while (42)
   { maitre_proc = nouveau_processus(0, 0);
-    bzero(&(motion_souris[num_taille]), 31);
-    NBR(&(motion_souris[num_taille]), per.srs.motion_x);
-    num_taille += NBR_LEN(per.srs.motion_x);
-    memcpy(&(motion_souris[num_taille]), ", ", 2);
-    num_taille += 2;
-    NBR(&(motion_souris[num_taille]), per.srs.motion_y);
-    num_taille += NBR_LEN(per.srs.motion_y);
-    memcpy(&(motion_souris[num_taille]), ")\n", 2);
-    write((*maitre_proc).sub_fd, motion_souris, num_taille + 2);
-  
-    while (uu < 2)
-    { printf("PROC::%s\n", motion_souris);
-      printf("EXP::(%d, %d)\n", per.srs.motion_x, per.srs.motion_y);
-      uu += 1; }
-  
-    num_taille = 9;
+    envoyer_souris(maitre_proc, per);
+    envoyer_clavier(maitre_proc, per);
     usleep(8000); }}
 
 static void pid_fantome()

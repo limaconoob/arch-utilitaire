@@ -68,8 +68,7 @@ void *gestion_souris(void *s)
       { if (e.code == BTN_LEFT)
         {}
         else if (e.code == BTN_RIGHT)
-        {}}}
-    /*kill((*periph).pid, SIGUSR2);*/ }}
+        {}}}}}
 
 // BTN_TOOL_FINGER
 // BTN_TOUCH
@@ -84,7 +83,8 @@ void *gestion_clavier(void *s)
   while (read((*periph).clv.fd, &e, sizeof(struct input_event)))
   { if (e.type == EV_KEY)
     { if (e.value == 1) // Appui
-      { if ((*periph).clv.flag_persistant & AltGr != 0 && e.code < 54)
+      { (*periph).clv.derniere_touche = noyau_clavier[e.code];
+        if ((*periph).clv.flag_persistant & AltGr != 0 && e.code < 54)
         { if ((*periph).clv.flag_persistant & Shift != 0)
           { //printf("NOYAU::%c, CODE::%d\n", noyau_clavier[e.code], e.code);
             }
@@ -110,12 +110,11 @@ void *gestion_clavier(void *s)
         { (*periph).clv.flag_persistant -= AltGr; }
         }
       else if (e.value == 2) // Maintien enfoncé
-      {}}
-    kill((*periph).pid, SIGUSR1); }
-}
+      {}}}}
 
 void init_souris(peripherique *periph)
 { (*periph).srs.fd = open("/dev/input/by-path/platform-i8042-serio-1-event-mouse", O_RDONLY | O_SYNC);
+//{ (*periph).srs.fd = open("/dev/input/mice", O_RDONLY | O_SYNC);
   (*periph).srs.motion_x = 0;
   (*periph).srs.motion_y = 0;
   (*periph).srs.icone_souris = Souris_Fleche;
