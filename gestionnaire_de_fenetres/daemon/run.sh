@@ -1,1 +1,1 @@
-gcc input.c -I$GRAPH -L$GRAPH -lgraphique -lm -lpthread -o DAEMON_INPUT
+gcc input.c protocole_entrees.c -I$GRAPH -L$GRAPH -lgraphique -lm -lpthread -o DAEMON_INPUT

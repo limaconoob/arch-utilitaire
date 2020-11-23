@@ -11,7 +11,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "graphiques.h"
 #include "peripheriques.h"
 
 #define SOCK_PATH "/home/arch-utilitaire/gestionnaire_de_fenetres/daemon/.sock/"
@@ -149,8 +148,10 @@ static void tache_cachee()
   { maitre_proc = nouveau_processus(0, 0); }
   while (42)
   { maitre_proc = nouveau_processus(0, 0);
-    envoyer_souris(maitre_proc, per);
-    envoyer_clavier(maitre_proc, per);
+    if ((*maitre_proc).masque & Souris_ON)
+    { envoyer_souris(maitre_proc, per); }
+    if ((*maitre_proc).masque & Clavier_ON)
+    { envoyer_clavier(maitre_proc, per); }
     usleep(8000); }}
 
 static void pid_fantome()

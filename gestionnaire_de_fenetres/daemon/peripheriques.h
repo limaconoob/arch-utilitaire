@@ -3,6 +3,14 @@
 
   #include "graphiques.h"
 
+  #define SOCK_PATH "/home/arch-utilitaire/gestionnaire_de_fenetres/daemon/.sock/"
+
+  enum Balise_Periph
+  { Souris_ON = 0b0001,
+    Clavier_ON = 0b0010,
+    Joystick_ON = 0b0100,
+    UART_ON = 0b1000 };
+
   typedef enum bool_sauvegarde
   { Sauve,
     Charge,
@@ -49,6 +57,8 @@
   peripherique init_periph(pid_t pid, pixels *fb);
   void init_souris(peripherique *periph);
   void init_clavier(peripherique *periph);
+
+  int attache_input(int masque);
 
 #endif
 
