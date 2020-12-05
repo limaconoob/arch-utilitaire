@@ -83,7 +83,7 @@ static int daemon_input_proc(int masque)
   closedir(dossier);
   return (flag); }
 
-int attache_input(int masque)
+int attache_entrees(int masque)
 { static processus_ctrl *entrees;
   entrees = connection_daemon(0, masque);
   struct sigaction act;

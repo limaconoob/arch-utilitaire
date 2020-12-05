@@ -45,6 +45,8 @@ typedef struct processus_ctrl
 
 size_t NBR_LEN(unsigned int k)
 { size_t i = 0;
+  if (!k)
+  { return (1); }
   while (k)
   { i += 1;
     k /= 10; }
@@ -67,7 +69,7 @@ processus_ctrl nouveau_socket(pid_t pid, int masque)
   size_t j = strlen(SOCK_PATH);
   memcpy(structure.my_addr.sun_path, SOCK_PATH, j);
   NBR(&(structure.my_addr.sun_path[j]), pid);
-  printf("NOM::%s\n", structure.my_addr.sun_path);
+  //printf("NOM::%s\n", structure.my_addr.sun_path);
   bind(structure.socket_fd, (struct sockaddr *)&(structure.my_addr), sizeof(structure.my_addr));
   listen(structure.socket_fd, 5);
   socklen_t k = sizeof(structure.my_addr);
@@ -108,30 +110,39 @@ static void ping_pid(int sig, siginfo_t *siginfo, void *contexte)
       nouveau_processus((*siginfo).si_pid, (*siginfo).si_value.sival_int);
       break; }}}
 
+// Motion : (Souris_PRET | Souris_Motion)'motion_x';'motion_y'
+// Bouton : (Souris_PRET | Bouton_Action)'dernier_clic'
+// Maintien : (Souris_PRET)'dernier_clic'
 void envoyer_souris(processus_ctrl *maitre_proc, peripherique per)
-{ char motion_souris[40];
-  size_t num_taille = 9;
-  memcpy(motion_souris, "MOTION::(", 9);
-  bzero(&(motion_souris[num_taille]), 31);
-  NBR(&(motion_souris[num_taille]), per.srs.motion_x);
-  num_taille += NBR_LEN(per.srs.motion_x);
-  memcpy(&(motion_souris[num_taille]), ", ", 2);
-  num_taille += 2;
-  NBR(&(motion_souris[num_taille]), per.srs.motion_y);
-  num_taille += NBR_LEN(per.srs.motion_y);
-  memcpy(&(motion_souris[num_taille]), ")\n", 2);
-  write((*maitre_proc).sub_fd, motion_souris, num_taille + 2); }
+{ unsigned char evenement_souris[40];
+  bzero(evenement_souris, 40);
+  *evenement_souris = per.pret;
+  size_t num_taille = 1;
+  if (per.pret & Souris_Motion)
+  { NBR(&(evenement_souris[num_taille]), per.srs.motion_x);
+    num_taille += NBR_LEN(per.srs.motion_x);
+    evenement_souris[num_taille] = ';';
+    num_taille += 1;
+    NBR(&(evenement_souris[num_taille]), per.srs.motion_y);
+    num_taille += NBR_LEN(per.srs.motion_y); }
+  else
+  { *(evenement_souris + 1) = per.srs.dernier_clic;
+    num_taille += 1; }
+  evenement_souris[num_taille] = '\n';
+  write((*maitre_proc).sub_fd, evenement_souris, num_taille + 1); }
 
+// Bouton : (Clavier_PRET | Bouton_Action)'derniere_touche'
+// Maintien : (Clavier_PRET)'derniere_touche'
 void envoyer_clavier(processus_ctrl *maitre_proc, peripherique per)
-{ char touche_clavier[20];
-  size_t num_taille = 9;
-  memcpy(touche_clavier, "CLAVIER::", 9);
-//  bzero(&(touche_clavier[num_taille]), 11);
-//  NBR(&(touche_clavier[num_taille]), per.clv.derniere_touche);
-//  num_taille += NBR_LEN(per.clv.derniere_touche);
-  touche_clavier[9] = per.clv.derniere_touche;
-  touche_clavier[10] = '\n';
-  write((*maitre_proc).sub_fd, touche_clavier, 11); }
+{ char touche_clavier[6];
+  bzero(touche_clavier, 6);
+  *touche_clavier = per.pret;
+  touche_clavier[1] = (per.clv.derniere_touche & 0xFF000000) >> 24;
+  touche_clavier[2] = (per.clv.derniere_touche & 0x00FF0000) >> 16;
+  touche_clavier[3] = (per.clv.derniere_touche & 0x0000FF00) >> 8;
+  touche_clavier[4] = per.clv.derniere_touche & 0x000000FF;
+  touche_clavier[5] = '\n';
+  write((*maitre_proc).sub_fd, touche_clavier, 6); }
 
 static void tache_cachee()
 { pixels fb = init_gui();
@@ -147,12 +158,13 @@ static void tache_cachee()
   while (!maitre_proc)
   { maitre_proc = nouveau_processus(0, 0); }
   while (42)
-  { maitre_proc = nouveau_processus(0, 0);
-    if ((*maitre_proc).masque & Souris_ON)
-    { envoyer_souris(maitre_proc, per); }
-    if ((*maitre_proc).masque & Clavier_ON)
-    { envoyer_clavier(maitre_proc, per); }
-    usleep(8000); }}
+  { if ((*maitre_proc).masque & Souris_ON && per.pret & Souris_PRET)
+    { envoyer_souris(maitre_proc, per);
+      per.pret = 0; }
+    if ((*maitre_proc).masque & Clavier_ON && per.pret & Clavier_PRET)
+    { envoyer_clavier(maitre_proc, per);
+      per.pret = 0; }
+    usleep(5000); }}
 
 static void pid_fantome()
 { pid_t pere;

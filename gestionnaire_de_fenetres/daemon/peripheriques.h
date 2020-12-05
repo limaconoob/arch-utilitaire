@@ -5,11 +5,32 @@
 
   #define SOCK_PATH "/home/arch-utilitaire/gestionnaire_de_fenetres/daemon/.sock/"
 
-  enum Balise_Periph
+  enum Periph_ON
   { Souris_ON = 0b0001,
     Clavier_ON = 0b0010,
     Joystick_ON = 0b0100,
     UART_ON = 0b1000 };
+
+  enum Evenement_Input
+  { Bouton_Maintien = 0b00000000,
+    Bouton_Appui = 0b00000001,
+    Bouton_Relache = 0b00000010,
+    Motion_Relatif = 0b00000100,
+    Motion_Absolu = 0b00001000,
+    Souris_Motion = 0b00001100,
+    Bouton_Action = 0b00000011,
+    Souris_PRET = 0b00010000,
+    Clavier_PRET = 0b00100000,
+    Joystick_PRET = 0b01000000,
+    UART_PRET = 0b10000000 };
+
+  enum Bouton_Souris
+  { Bouton_Souris_Gauche = 0b00000001,
+    Bouton_Souris_Droit = 0b00000010,
+    Bouton_Souris_Molette = 0b00000100,
+    Molette_Haut = 0b00001000,
+    Molette_Bas = 0b00010000,
+    Bouton_Souris_Annexe = 0b11100000 };
 
   typedef enum bool_sauvegarde
   { Sauve,
@@ -40,6 +61,7 @@
   typedef struct souris
   { u_int motion_x;
     u_int motion_y;
+    u_char dernier_clic;
     extra_font icone_souris;
     couleurs pointeur;
     int fd;
@@ -49,6 +71,7 @@
   typedef struct peripherique
   { clavier clv;
     souris srs;
+    u_char pret;
     pid_t pid; // PID du processus appelant
     pixels *fb;
   } peripherique;
@@ -58,7 +81,9 @@
   void init_souris(peripherique *periph);
   void init_clavier(peripherique *periph);
 
-  int attache_input(int masque);
+  int attache_entrees(int masque);
+  void prochaine_entree(int fd);
+  void debug(int fd);
 
 #endif
 

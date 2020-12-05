@@ -3,7 +3,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <strings.h>
+#include <sys/select.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -12,10 +14,6 @@
 
 #include "peripheriques.h"
 #include "noyau_clavier.h"
-
-// Mettre un get_event() dans le programme utilisateur
-// init_event 
-// read /dev/input, et qui crée un Socket par nouveau processus
 
 void dessous_icone(bool_sauvegarde s, pixels *fb)
 { static u_int sauvegarde[9][7];
@@ -52,23 +50,32 @@ void *gestion_souris(void *s)
 { peripherique *periph = (peripherique*)s;
   souris *srs = &((*periph).srs);
   struct input_event e;
-  while (read((*srs).fd, &e, sizeof(struct input_event)))
-  { if (e.type == EV_ABS)
-    { if (e.code == ABS_MT_POSITION_X)
+  fd_set rfds;
+  while (42)
+  { FD_ZERO(&rfds);
+    FD_SET((*srs).fd, &rfds);
+    select((*srs).fd + 1, &rfds, (void*)0, (void*)0, (void*)0);
+    read((*srs).fd, &e, sizeof(struct input_event));
+    if (e.type == EV_ABS)
+    { (*periph).pret |= Motion_Absolu;
+      if (e.code == ABS_MT_POSITION_X)
       { pointeur_souris(srs, ((e.value - 1274) * (*(*periph).fb).w) / 4452, (*srs).motion_y, (*periph).fb); }
       else if (e.code == ABS_MT_POSITION_Y)
       { pointeur_souris(srs, (*srs).motion_x, ((e.value - 916) * (*(*periph).fb).h) / 4040, (*periph).fb); }}
     else if (e.type == EV_KEY) 
     { if (e.value == 1) /// Appui
-      { if (e.code == BTN_LEFT)
-        {}
+      { (*periph).pret |= Bouton_Appui;
+        if (e.code == BTN_LEFT)
+        { (*periph).srs.dernier_clic = Bouton_Souris_Gauche; }
         else if (e.code == BTN_RIGHT)
-        {}}
+        { (*periph).srs.dernier_clic = Bouton_Souris_Droit; }}
       else if (e.value == 0) /// Relâchement
-      { if (e.code == BTN_LEFT)
-        {}
+      { (*periph).pret |= Bouton_Relache;
+        if (e.code == BTN_LEFT)
+        { (*periph).srs.dernier_clic = Bouton_Souris_Gauche; }
         else if (e.code == BTN_RIGHT)
-        {}}}}}
+        { (*periph).srs.dernier_clic = Bouton_Souris_Droit; }}}
+    (*periph).pret |= Souris_PRET; }}
 
 // BTN_TOOL_FINGER
 // BTN_TOUCH
@@ -80,10 +87,16 @@ void *gestion_souris(void *s)
 void *gestion_clavier(void *s)
 { peripherique *periph = (peripherique*)s;
   struct input_event e;
-  while (read((*periph).clv.fd, &e, sizeof(struct input_event)))
-  { if (e.type == EV_KEY)
+  fd_set rfds;
+  while (42)
+  { FD_ZERO(&rfds);
+    FD_SET((*periph).clv.fd, &rfds);
+    select((*periph).clv.fd + 1, &rfds, (void*)0, (void*)0, (void*)0);
+    read((*periph).clv.fd, &e, sizeof(struct input_event));
+    if (e.type == EV_KEY)
     { if (e.value == 1) // Appui
       { (*periph).clv.derniere_touche = noyau_clavier[e.code];
+        (*periph).pret |= Bouton_Appui;
         if ((*periph).clv.flag_persistant & AltGr != 0 && e.code < 54)
         { if ((*periph).clv.flag_persistant & Shift != 0)
           { //printf("NOYAU::%c, CODE::%d\n", noyau_clavier[e.code], e.code);
@@ -102,7 +115,8 @@ void *gestion_clavier(void *s)
         { (*periph).clv.flag_persistant |= AltGr; }
         }
       else if (e.value == 0) // Relâchement
-      { if (e.code == KEY_LEFTSHIFT && (*periph).clv.flag_persistant & Shift_Gauche)
+      { (*periph).pret |= Bouton_Relache;
+        if (e.code == KEY_LEFTSHIFT && (*periph).clv.flag_persistant & Shift_Gauche)
         { (*periph).clv.flag_persistant -= Shift_Gauche; }
         else if (e.code == KEY_RIGHTSHIFT && (*periph).clv.flag_persistant & Shift_Droit)
         { (*periph).clv.flag_persistant -= Shift_Droit; }
@@ -110,13 +124,16 @@ void *gestion_clavier(void *s)
         { (*periph).clv.flag_persistant -= AltGr; }
         }
       else if (e.value == 2) // Maintien enfoncé
-      {}}}}
+      { (*periph).pret |= Bouton_Maintien;
+        }}
+    (*periph).pret |= Clavier_PRET; }}
 
 void init_souris(peripherique *periph)
 { (*periph).srs.fd = open("/dev/input/by-path/platform-i8042-serio-1-event-mouse", O_RDONLY | O_SYNC);
 //{ (*periph).srs.fd = open("/dev/input/mice", O_RDONLY | O_SYNC);
   (*periph).srs.motion_x = 0;
   (*periph).srs.motion_y = 0;
+  (*periph).srs.dernier_clic = 0;
   (*periph).srs.icone_souris = Souris_Fleche;
   pthread_create(&((*periph).srs.canal), (void*)0, &gestion_souris, periph); }
 
@@ -132,6 +149,7 @@ peripherique init_periph(pid_t maitre_pid, pixels *fb)
   bzero(&(periph.clv.canal), sizeof(pthread_t));
   bzero(&(periph.srs.canal), sizeof(pthread_t));
   periph.pid = maitre_pid;
+  periph.pret = 0;
   periph.fb = fb;
   return (periph); }
 
