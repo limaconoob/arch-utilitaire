@@ -1,6 +1,12 @@
-export GRAPH=/tmp/arch-utilitaire/libgraphique/bibliotheque/
-export DAEMON=/tmp/arch-utilitaire/gestionnaire_de_fenetres/daemon/
-export LILITHIA=/tmp/lilithia
+
+## Cette commande met l'utilisateur courant dans le groupe pour lire les entrées
+## Il faut redémarrer l'OS (au moins la session) pour que la modification ait effet
+# sudo usermod -a -G `stat -c '%G' /dev/input/mice` `whoami`
+
+export GRAPH=$HOME/arch-utilitaire/libgraphique/bibliotheque/
+export DAEMON=$HOME/arch-utilitaire/gestionnaire_de_fenetres/daemon/
+export LILITHIA=$HOME/lilithia
+
 cd $GRAPH
 sh run.sh
 cd $DAEMON

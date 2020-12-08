@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <stdio.h>
+
 static void PNBR(unsigned int nb)
 { if (nb / 10)
   { PNBR(nb / 10); }

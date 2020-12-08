@@ -80,9 +80,6 @@ void *gestion_souris(void *s)
 // BTN_TOOL_FINGER
 // BTN_TOUCH
 
-    //{ printf("(%lu, %lu)\n", periph.motion_x, periph.motion_y); }
-    //{ printf("TYPE::%d, CODE::%d, VALUE::%d\n", e.type, e.code, e.value); }
-
 /// flag_persistant : 0b shift_gauche shift_droite alt altgr ctrl_gauche ctrl_droite fn 
 void *gestion_clavier(void *s)
 { peripherique *periph = (peripherique*)s;

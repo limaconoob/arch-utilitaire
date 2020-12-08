@@ -13,8 +13,6 @@
 
 #include "peripheriques.h"
 
-#define SOCK_PATH "/home/arch-utilitaire/gestionnaire_de_fenetres/daemon/.sock/"
-
 // Mettre un get_event() dans le programme utilisateur
 // init_event 
 // read /dev/input, et qui crée un Socket par nouveau processus
@@ -66,10 +64,13 @@ processus_ctrl nouveau_socket(pid_t pid, int masque)
   structure.pid = pid;
   structure.socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
   structure.my_addr.sun_family = AF_UNIX;
-  size_t j = strlen(SOCK_PATH);
-  memcpy(structure.my_addr.sun_path, SOCK_PATH, j);
+  bzero(structure.my_addr.sun_path, 108);
+  char *genv = getenv("DAEMON");
+  size_t j = strlen(genv);
+  memcpy(structure.my_addr.sun_path, genv, j);
+  memcpy(&(structure.my_addr.sun_path[j]), ".sock/", 6);
+  j += 6;
   NBR(&(structure.my_addr.sun_path[j]), pid);
-  //printf("NOM::%s\n", structure.my_addr.sun_path);
   bind(structure.socket_fd, (struct sockaddr *)&(structure.my_addr), sizeof(structure.my_addr));
   listen(structure.socket_fd, 5);
   socklen_t k = sizeof(structure.my_addr);
@@ -105,9 +106,7 @@ processus_ctrl *nouveau_processus(pid_t pid, int masque)
 static void ping_pid(int sig, siginfo_t *siginfo, void *contexte)
 { switch (sig)
   { case SIGUSR1 :
-    { //printf("PID::%ld, UID::%ld\n", (long)(*siginfo).si_pid, (long)(*siginfo).si_uid);
-      //printf("SI_VALUE::%d\n", (*siginfo).si_value.sival_int);
-      nouveau_processus((*siginfo).si_pid, (*siginfo).si_value.sival_int);
+    { nouveau_processus((*siginfo).si_pid, (*siginfo).si_value.sival_int);
       break; }}}
 
 // Motion : (Souris_PRET | Souris_Motion)'motion_x';'motion_y'

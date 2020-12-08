@@ -35,10 +35,13 @@ static processus_ctrl *connection_daemon(pid_t pid, int masque)
   if (pid)
   { attache.pid = pid;
     attache.socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    bzero(&(attache.addr), sizeof(attache.addr));
     attache.addr.sun_family = AF_UNIX;
-    size_t j = strlen(SOCK_PATH);
-    memcpy(attache.addr.sun_path, SOCK_PATH, j);
+    bzero(attache.addr.sun_path, 108);
+    char *genv = getenv("DAEMON");
+    size_t j = strlen(genv);
+    memcpy(attache.addr.sun_path, genv, j);
+    memcpy(&(attache.addr.sun_path[j]), ".sock/", 6);
+    j += 6;
     NBR(&(attache.addr.sun_path[j]), getpid());
     connect(attache.socket_fd, (struct sockaddr*)&attache.addr, sizeof(attache.addr)); }
   else
