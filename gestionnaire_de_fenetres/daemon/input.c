@@ -11,6 +11,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <errno.h>
+
 #include "peripheriques.h"
 
 // Mettre un get_event() dans le programme utilisateur
@@ -62,7 +64,9 @@ processus_ctrl nouveau_socket(pid_t pid, int masque)
   bzero(&structure, sizeof(processus_ctrl));
   structure.masque = masque;
   structure.pid = pid;
+  errno = 0;
   structure.socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  printf("MAITRE_SOCK::%d, ERR::%u\n", structure.socket_fd, errno);
   structure.my_addr.sun_family = AF_UNIX;
   bzero(structure.my_addr.sun_path, 108);
   char *genv = getenv("DAEMON");
@@ -71,11 +75,16 @@ processus_ctrl nouveau_socket(pid_t pid, int masque)
   memcpy(&(structure.my_addr.sun_path[j]), ".sock/", 6);
   j += 6;
   NBR(&(structure.my_addr.sun_path[j]), pid);
-  bind(structure.socket_fd, (struct sockaddr *)&(structure.my_addr), sizeof(structure.my_addr));
-  listen(structure.socket_fd, 5);
+  printf("CHEMIN::%s\n", structure.my_addr.sun_path);
+  u_int l, m;
+  l = bind(structure.socket_fd, (struct sockaddr *)&(structure.my_addr), sizeof(structure.my_addr));
+  printf("BIND::%u, ERR::%u\n", l, errno);
+  m = listen(structure.socket_fd, 5);
+  printf("LISTEN::%u, ERR::%u\n", m, errno);
   socklen_t k = sizeof(structure.my_addr);
   kill(pid, SIGUSR1);
   structure.sub_fd = accept(structure.socket_fd, (struct sockaddr*)&(structure.peer_addr), &k);
+  printf("SOCKLEN::%u, SUB_FD::%d, ERR::%u\n", k, structure.sub_fd, errno);
   return (structure); }
 
 size_t nombre_processus(processus_ctrl *attache)
@@ -106,7 +115,9 @@ processus_ctrl *nouveau_processus(pid_t pid, int masque)
 static void ping_pid(int sig, siginfo_t *siginfo, void *contexte)
 { switch (sig)
   { case SIGUSR1 :
-    { nouveau_processus((*siginfo).si_pid, (*siginfo).si_value.sival_int);
+    { printf("PID::%ld, UID::%ld\n", (long)(*siginfo).si_pid, (long)(*siginfo).si_uid);
+      printf("SI_VALUE::%d\n", (*siginfo).si_value.sival_int);
+      nouveau_processus((*siginfo).si_pid, (*siginfo).si_value.sival_int);
       break; }}}
 
 // Motion : (Souris_PRET | Souris_Motion)'motion_x';'motion_y'
@@ -156,6 +167,7 @@ static void tache_cachee()
   processus_ctrl *maitre_proc = (void*)0;
   while (!maitre_proc)
   { maitre_proc = nouveau_processus(0, 0); }
+  printf("SERVEUR OK, SUB_FD::%d, MASQUE::%d\n", (*maitre_proc).sub_fd, (*maitre_proc).masque);
   while (42)
   { if ((*maitre_proc).masque & Souris_ON && per.pret & Souris_PRET)
     { envoyer_souris(maitre_proc, per);

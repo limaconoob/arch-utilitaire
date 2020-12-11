@@ -11,6 +11,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <errno.h>
+
 #include "peripheriques.h"
 
 typedef struct processus_ctrl
@@ -34,7 +36,9 @@ static processus_ctrl *connection_daemon(pid_t pid, int masque)
 { static processus_ctrl attache;
   if (pid)
   { attache.pid = pid;
+    errno = 0;
     attache.socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    printf("ESCLAVE_SOCK::%d, ERR::%u\n", attache.socket_fd, errno);
     attache.addr.sun_family = AF_UNIX;
     bzero(attache.addr.sun_path, 108);
     char *genv = getenv("DAEMON");
@@ -43,7 +47,11 @@ static processus_ctrl *connection_daemon(pid_t pid, int masque)
     memcpy(&(attache.addr.sun_path[j]), ".sock/", 6);
     j += 6;
     NBR(&(attache.addr.sun_path[j]), getpid());
-    connect(attache.socket_fd, (struct sockaddr*)&attache.addr, sizeof(attache.addr)); }
+    printf("CONN::%s\n", attache.addr.sun_path);
+    u_int coucou;
+    coucou = connect(attache.socket_fd, (struct sockaddr*)&attache.addr, sizeof(attache.addr));
+    printf("ATTACHE! PID::%u, FD::%u, CONNECT::%u, ERR::%u\n", attache.pid, attache.socket_fd, coucou, errno);
+  }
   else
   { attache.masque = masque;
     attache.pid = 0; }
@@ -97,6 +105,7 @@ int attache_entrees(int masque)
   if (!daemon_input_proc(masque))
   { while (!(*entrees).pid)
     { ; }
+    printf("SOCKET_FILS! FD::%u, PID::%u\n", (*entrees).socket_fd, (*entrees).pid);
     return ((*entrees).socket_fd); }
   return (-1); }
 

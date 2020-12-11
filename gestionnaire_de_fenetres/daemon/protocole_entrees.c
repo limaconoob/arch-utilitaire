@@ -51,6 +51,7 @@ void *gestion_souris(void *s)
   souris *srs = &((*periph).srs);
   struct input_event e;
   fd_set rfds;
+  printf("INIT_SRS\n");
   while (42)
   { FD_ZERO(&rfds);
     FD_SET((*srs).fd, &rfds);
@@ -85,6 +86,7 @@ void *gestion_clavier(void *s)
 { peripherique *periph = (peripherique*)s;
   struct input_event e;
   fd_set rfds;
+  printf("INIT_CLV\n");
   while (42)
   { FD_ZERO(&rfds);
     FD_SET((*periph).clv.fd, &rfds);
@@ -136,6 +138,7 @@ void init_souris(peripherique *periph)
 
 void init_clavier(peripherique *periph)
 { (*periph).clv.fd = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY | O_SYNC);
+//{ (*periph).clv.fd = open("/dev/input/event2", O_RDONLY | O_SYNC);
   (*periph).clv.flag_persistant = 0;
   (*periph).clv.derniere_touche = 0;
   bzero((*periph).clv.queue, 42 * sizeof(u_int));
