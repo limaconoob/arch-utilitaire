@@ -14,12 +14,16 @@
 
 static void tache_cachee()
 { pixels fb = init_gui();
+  u_char segmenteur = 4;
   while (42)
-  { vive_la_France(&fb);
-    gestion_batterie(&fb);
-    gestion_horloge(&fb);
+  { gestion_horloge(&fb);
     gestion_internet(&fb);
-    usleep(100000); }}
+    segmenteur += 1;
+    if (segmenteur == 5)
+    { gestion_batterie(&fb);
+      vive_la_France(&fb);
+      segmenteur = 0;}
+    usleep(800000); }}
 
 static void pid_fantome()
 { pid_t pere;

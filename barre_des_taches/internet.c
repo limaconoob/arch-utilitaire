@@ -8,14 +8,14 @@
 #include "graphiques.h"
 
 void icone_ethernet(pixels *fb)
-{ dessin7x9(ethernet, Blanc, Noir, ((*fb).w - 30), 34, fb);
-  lseek((*fb).pix, (((*fb).w - 29) + (36 * (*fb).w)) * sizeof(u_int), SEEK_SET);
+{ dessin7x9(ethernet, Blanc, Noir, ((*fb).w - 30), 47, fb);
+  lseek((*fb).pix, (((*fb).w - 29) + (49 * (*fb).w)) * sizeof(u_int), SEEK_SET);
   u_long k = (u_long)Vert << 32 | Vert;
   write((*fb).pix, (char*)(&k), 8);
   lseek((*fb).pix, 3 * sizeof(u_int), SEEK_CUR);
   k = (u_long)Orange << 32 | Orange;
   write((*fb).pix, (char*)(&k), 8);
-  lseek((*fb).pix, (((*fb).w - 29) + (37 * (*fb).w)) * sizeof(u_int), SEEK_SET);
+  lseek((*fb).pix, (((*fb).w - 29) + (50 * (*fb).w)) * sizeof(u_int), SEEK_SET);
   k = (u_long)Vert<< 32 | Vert;
   write((*fb).pix, (char*)(&k), 8);
   lseek((*fb).pix, 3 * sizeof(u_int), SEEK_CUR);
@@ -26,15 +26,16 @@ void icone_ethernet(pixels *fb)
 
 void nettoyage_zone(pixels *fb)
 { lseek((*fb).pix, (*fb).shift, SEEK_SET);
-  rectangle r = { (*fb).w - (22 * 8), 34, 22 * 8, 10 };
-  dessin_pave(r, Noir, fb); }
+  point_pix pix = { (*fb).w - (22 * 8), 47, Noir };
+  rectangle r = { pix, 22 * 8, 10 };
+  dessin_pave(r, fb); }
 
 void afficher_debit(u_long debit, pixels *fb)
 { u_char cadran[20];
   static u_char i = 0;
   if (i > 0)
   { memset(cadran, ' ', i);
-    phrase_bande(cadran, i, Blanc, Noir, ((*fb).w - 75 - (i * 8)), 34, fb); }
+    phrase_bande(cadran, i, Blanc, Noir, ((*fb).w - 75 - (i * 8)), 47, fb); }
   i = 0;
   if (debit == 0)
   { cadran[15] = '0';
@@ -47,7 +48,7 @@ void afficher_debit(u_long debit, pixels *fb)
   cadran[17] = 'B';
   cadran[18] = '/';
   cadran[19] = 's';
-  phrase_bande(&(cadran[16 - i]), i + 4, Blanc, Noir, ((*fb).w - 75 - (i * 8)), 34, fb); }
+  phrase_bande(&(cadran[16 - i]), i + 4, Blanc, Noir, ((*fb).w - 75 - (i * 8)), 47, fb); }
 
 void debit_moyen(pixels *fb)
 { static u_char i = 0;
