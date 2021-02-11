@@ -1,12 +1,15 @@
+
+#include <unistd.h>
+
 #include "graphiques.h"
 #include "couleurs.h"
-/*
+
 int main()
 { pixels fb = init_gui();
-  int i = 0;
-  while (i < 20000000)
+  while (42)
   { nettoyage(Blanc, &fb);
+    sleep(1);
     nettoyage(Noir, &fb);
-    i == 1; }}
-*/
+    sleep(1); }}
+
 
